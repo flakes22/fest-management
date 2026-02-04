@@ -1,4 +1,5 @@
 const Event = require("../models/event");
+const User = require("../models/user");
 
 exports.create = async (req, res) => {
   try {
@@ -72,7 +73,34 @@ exports.list = async (req, res) => {
     const q = {};
     if (req.query.type) q.type = req.query.type;
     if (req.query.organizer) q.organizer = req.query.organizer;
-    const events = await Event.find(q).sort({ startDate: 1 });
+
+    const events = await Event.find(q).sort({ startDate: 1 }).lean();
+
+    // If user logged in, re-rank by preferences
+    if (req.user) {
+      const me = await User.findById(req.user.userId).select("interests followedOrganizers").lean();
+      const interests = new Set(me?.interests || []);
+      const followed = new Set((me?.followedOrganizers || []).map(String));
+
+      const scored = events.map((e) => {
+        let score = 0;
+        // Followed organizers get a boost
+        if (followed.has(String(e.organizer))) score += 5;
+        // Tag matches boost (each match +1)
+        const tags = Array.isArray(e.tags) ? e.tags : [];
+        score += tags.reduce((acc, t) => acc + (interests.has(t) ? 1 : 0), 0);
+        return { score, e };
+      });
+
+      scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // tie-breaker by startDate ascending
+        return new Date(a.e.startDate) - new Date(b.e.startDate);
+      });
+
+      return res.json({ events: scored.map((s) => s.e) });
+    }
+
     res.json({ events });
   } catch (e) { console.error(e); res.status(500).json({ message: "Server error" }); }
 };
