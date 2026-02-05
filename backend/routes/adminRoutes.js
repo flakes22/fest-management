@@ -48,4 +48,26 @@ router.delete("/organizers/:id", auth, requireRole("admin"), async (req, res) =>
   }
 });
 
+// Reset organizer password (admin-only)
+router.post("/organizers/:id/reset-password", auth, requireRole("admin"), async (req, res) => {
+  try {
+    const { newPassword } = req.body || {};
+    if (!newPassword) return res.status(400).json({ message: "newPassword is required" });
+
+    const organizer = await User.findById(req.params.id);
+    if (!organizer || organizer.role !== "organizer") {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    organizer.password = hash;
+    await organizer.save();
+
+    res.json({ message: "Organizer password reset successfully" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
