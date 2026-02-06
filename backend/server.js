@@ -40,7 +40,8 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/registrations", require("./routes/registrationRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
-app.use("/api/organizers", require("./routes/organizerRoutes")); // NEW
+app.use("/api/organizers", require("./routes/organizerRoutes"));
+app.use("/api/organizer", require("./routes/organizerProfileRoutes")); // NEW
 
 const errorHandler = require("./middleware/errorHandler");
 

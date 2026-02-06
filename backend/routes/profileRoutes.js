@@ -5,6 +5,40 @@ const { Types } = require("mongoose");
 
 const router = express.Router();
 
+// NEW: Get my profile (display-only)
+router.get("/me", auth, async (req, res) => {
+  try {
+    const me = await User.findById(req.user.userId)
+      .select("-password")
+      .populate("followedOrganizers", "_id organizerName organizerCategory organizerDescription");
+    if (!me) return res.status(404).json({ message: "User not found" });
+
+    // Normalize shape for frontend
+    const profile = {
+      firstName: me.firstName,
+      lastName: me.lastName,
+      email: me.email,
+      participantType: me.participantType,
+      college: me.college || "",
+      contactNumber: me.contactNumber || "",
+      interests: me.interests || [],
+      followedOrganizers: (me.followedOrganizers || []).map((o) => ({
+        _id: o._id,
+        organizerName: o.organizerName,
+        organizerCategory: o.organizerCategory,
+        organizerDescription: o.organizerDescription,
+      })),
+      // Optional future field
+      photoUrl: me.photoUrl || ""
+    };
+
+    res.json({ profile });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Update participant profile (editable fields)
 router.put("/me", auth, async (req, res) => {
   try {
