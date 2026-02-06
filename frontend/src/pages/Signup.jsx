@@ -36,8 +36,8 @@ const Signup = () => {
         interests: interestsArr,
       });
 
-      alert("Registration successful. Please login.");
-      navigate("/login");
+      alert("Registration successful.");
+      navigate("/onboarding/preferences"); // go to onboarding
     } catch (err) {
       const msg = err?.response?.data?.message || "Signup failed";
       alert(msg);

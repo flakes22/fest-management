@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
+import api from "../api/api"; // fixed path (was ../api)
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +13,19 @@ const Login = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate("/dashboard");
+      // Optionally check preferences and redirect
+      const role = localStorage.getItem("role");
+      if (role === "participant") {
+        try {
+          const res = await api.get("/profile/preferences");
+          const hasPrefs = (res.data.interests?.length || 0) > 0 || (res.data.followedOrganizers?.length || 0) > 0;
+          navigate(hasPrefs ? "/dashboard" : "/onboarding/preferences");
+        } catch {
+          navigate("/dashboard");
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       alert("Login failed");
     }

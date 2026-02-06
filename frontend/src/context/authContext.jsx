@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("role", res.data.role);
 
     setUser({ role: res.data.role });
+    // The redirect decision can be done in Login.jsx using role and a quick preferences check
   };
 
   const logout = () => {
