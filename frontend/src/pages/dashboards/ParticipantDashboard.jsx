@@ -24,11 +24,12 @@ const ParticipantDashboard = ({ onLogout }) => {
   }, []);
 
   const filteredHistory = history.filter((r) => {
-    if (tab === "normal") return r.type === "normal" && ["registered", "approved"].includes(r.status);
     if (tab === "merchandise") return r.type === "merchandise";
     if (tab === "completed") return r.status === "completed";
-    if (tab === "cancelled") return ["cancelled", "rejected"].includes(r.status);
-    return true;
+    if (tab === "cancelled") return r.status === "cancelled" || r.status === "rejected";
+    return r.type !== "merchandise" && r.status !== "completed" && r.status !== "cancelled" && r.status !== "rejected"
+      ? true
+      : tab === "normal";
   });
 
   return (
